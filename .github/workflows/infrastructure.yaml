@@ -1,0 +1,61 @@
+on:
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  infrastructure:
+    name: 'infrastructure'
+    runs-on: ubuntu-latest
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+        # Checkout the repository to the GitHub Actions runner
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: install npm
+          uses: actions/setup-node@v3
+          with:
+            node-version: 14.x
+
+        - name: Initialize Terraform
+          uses: hashicorp/setup-terraform@v1
+          with:
+            terraform_version: 1.2.4
+
+        - name: Configure AWS CLI
+          run: |
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
+            aws configure set default.region ${{ vars.AWS_REGION }}
+
+        # - name: linting
+        #   id: fmt
+        #   run: |
+        #     pip install pre-commit
+        #     pre-commit run --all-files
+        #     terraform fmt -recursive
+
+        # - name: terraform init -migrate-state
+        #   id: InitMigrateState
+        #   run: terraform init -init -reconfigure
+
+        - name: Terraform Init
+          id: Init
+          run: terraform init -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY }}" -backend-config="secret_key=${{ secrets.AWS_SECRET_KEY }}"
+
+        - name: Terraform Validate
+          id: Validate
+          run: terraform validate
+
+        - name: Terraform Plan
+          id: Plan
+          run: terraform plan
+
+        - name: Terraform Apply
+          id: Apply
+          run: terraform apply -auto-approve
