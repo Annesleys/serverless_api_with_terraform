@@ -53,7 +53,7 @@ resource "null_resource" "dummy_artifact" {
     source_files = "1"
   }
   provisioner "local-exec" {
-    command = "./dummy.sh"
+    command = "${path.module}/dummy.sh"
 
     environment = {
       bucket_name = var.s3_bucket
