@@ -49,14 +49,20 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 ####### Uploading dummy artifact to s3 bucket to create Lambda function #############
 
 resource "null_resource" "dummy_artifact" {
+  triggers = {
+    source_files = "1"
+  }
   provisioner "local-exec" {
-    working_dir = path.module
     command = "./dummy.sh"
 
     environment = {
       bucket_name = var.s3_bucket
     }
-    interpreter = ["bash", "-c"]
+
+    interpreter = [
+      "bash",
+      "-c"
+    ]
   }
 }
 
